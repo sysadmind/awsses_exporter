@@ -19,6 +19,7 @@ Flags:
       --version           Show application version.
 ```
 
+AWS credentials are pulled via the rules in https://docs.aws.amazon.com/sdk-for-go/api/aws/#Config. Most notably you can use the environment variables `AWS_ACCESS_KEY` and `AWS_SECRET_ACCESS_KEY`.
 
 ## Build
 
