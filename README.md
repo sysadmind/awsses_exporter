@@ -13,6 +13,9 @@ Flags:
                           Address to listen on for web interface and telemetry.
       --web.telemetry-path="/metrics"
                           Path under which to expose metrics.
+      --aws.regions="us-east-1"
+                          List of AWS regions to export the metrics for.
+                          To pass in multiple regions, repeat the flag like so: --aws.regions="us-east-1" --aws.regions="eu-central-1"
       --log.level="info"  Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]
       --log.format="logger:stderr"
                           Set the log target and format. Example: "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"
@@ -20,6 +23,8 @@ Flags:
 ```
 
 AWS credentials are pulled via the rules in https://docs.aws.amazon.com/sdk-for-go/api/aws/#Config. Most notably you can use the environment variables `AWS_ACCESS_KEY` and `AWS_SECRET_ACCESS_KEY`.
+
+If using config file, credentials file or web identity token file, make sure to set `AWS_SDK_LOAD_CONFIG=1`.
 
 ## Build
 
