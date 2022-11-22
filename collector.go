@@ -23,6 +23,7 @@ const (
 type Exporter struct {
 	accessKey       string
 	secretAccessKey string
+	awsSesRegions   []string
 
 	max24hoursend   *prometheus.Desc
 	maxsendrate     *prometheus.Desc
@@ -30,7 +31,7 @@ type Exporter struct {
 }
 
 // NewExporter returns an initialized exporter.
-func NewExporter() *Exporter {
+func NewExporter(awsSesRegions *[]string) *Exporter {
 	return &Exporter{
 		max24hoursend: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "max24hoursend"),
@@ -50,6 +51,7 @@ func NewExporter() *Exporter {
 			[]string{"aws_region"},
 			nil,
 		),
+		awsSesRegions: *awsSesRegions,
 	}
 }
 
@@ -64,8 +66,7 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 // Collect fetches the statistics from the configured memcached server, and
 // delivers them as Prometheus metrics. It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	awsSesRegions := []string{"us-east-1", "us-west-2", "eu-west-1"}
-	for _, regionName := range awsSesRegions {
+	for _, regionName := range e.awsSesRegions {
 		svc := ses.New(session.New(), aws.NewConfig().WithRegion(regionName))
 		input := &ses.GetSendQuotaInput{}
 
@@ -92,6 +93,7 @@ func main() {
 	var (
 		listenAddress = kingpin.Flag("web.listen-address", "Address to listen on for web interface and telemetry.").Default(":9199").String()
 		metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").String()
+		awsSesRegions = kingpin.Flag("aws.regions", "AWS Regions to be monitored.").Default("us-east-1", "us-west-2", "eu-west-1").Strings()
 	)
 	log.AddFlags(kingpin.CommandLine)
 	kingpin.Version(version.Print("awsses_exporter"))
@@ -101,7 +103,7 @@ func main() {
 	log.Infoln("Starting awsses_exporter", version.Info())
 	log.Infoln("Build context", version.BuildContext())
 
-	prometheus.MustRegister(NewExporter())
+	prometheus.MustRegister(NewExporter(awsSesRegions))
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
